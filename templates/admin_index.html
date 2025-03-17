@@ -1,0 +1,579 @@
+<!--
+@author: 梁卓权 3122004397
+@create: 2025-01-01
+@last_update: 2025-01-05
+@description: 管理员系统-用户管理页面
+@version: 8.0
+@process: 
+    1.0: 新建文件，添加用户管理跳转
+    2.0: 完善用户管理页面，实现交互
+    3.0: 添加航班管理跳转   
+    4.0: 添加飞机管理跳转
+    5.0: 添加管理员管理跳转
+    6.0：css样式升级，弃用基本表单，改用js实现传输
+    7.0: 添加订单管理跳转
+    8.0: 链接引用main.css和main.js
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员界面</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/main.css">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #4285f4;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
+            --background-color: #f8f9fa;
+            --sidebar-color: #2c3e50;
+            --text-color: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-color);
+            color: white;
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar ul li a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 0.8rem 1rem;
+            display: block;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(10px);
+        }
+
+        .content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-header h1 {
+            font-size: 2rem;
+            color: var(--text-color);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            color: #666;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .edit-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            width: 500px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            position: absolute;
+            right: 1.5rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            color: var(--danger-color);
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.2);
+        }
+
+        .save-btn {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+            }
+            .content {
+                margin-left: 0;
+            }
+            .modal-content {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <h2>航空管理系统</h2>
+        <ul>
+            <li><a class="active">用户管理</a></li>
+            <li><a href="/admin_index/flight_manage">航班管理</a></li>
+            <li><a href="/admin_index/plane_manage">飞机管理</a></li>
+            <li><a href="/admin_index/admin_manage">管理员管理</a></li>
+            <li><a href="/admin_index/order_manage">订单管理</a></li>
+            <li><a href="/">退出登录</a></li>
+        </ul>
+    </nav>
+    <main class="content">
+        <div class="content-header">
+            <h1>用户列表</h1>
+        </div>
+        {% if message %}
+            <div class="alert">{{ message }}</div>
+        {% endif %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>用户ID</th>
+                        <th>用户名</th>
+                        <th>密码</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.UserID }}</td>
+                        <td>{{ user.Name }}</td>
+                        <td>{{ user.Passwd }}</td>
+                        <td>
+                            <button class="button edit-btn" onclick="openEditModal('{{ user.UserID }}', '{{ user.Name }}', '{{ user.Passwd }}')">
+                                <span class="material-icons">edit</span>编辑
+                            </button>
+                            <button class="button delete-btn" onclick="deleteUser('{{ user.UserID }}')">
+                                <span class="material-icons">delete</span>删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">编辑用户</h2>
+            <form id="editForm" onsubmit="saveUser(event)">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label for="editName">用户名：</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPasswd">密码：</label>
+                    <input type="text" id="editPasswd" required>
+                </div>
+                <button type="submit" class="save-btn">
+                    <span class="material-icons">save</span>保存更改
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">确认删除</h2>
+            <p style="margin-bottom: 2rem; color: #666;">您确定要删除该用户吗？此操作不可撤销。</p>
+            <input type="hidden" id="deleteUserId">
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="closeDeleteModal()" class="button" style="flex: 1; background-color: #6c757d; color: white;">
+                    <span class="material-icons">close</span>取消
+                </button>
+                <button onclick="confirmDelete()" class="button delete-btn" style="flex: 1;">
+                    <span class="material-icons">delete_forever</span>确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 打开编辑模态框
+        function openEditModal(userId, name, passwd) {
+            document.getElementById('editModal').style.display = 'block';
+            document.getElementById('editUserId').value = userId;
+            document.getElementById('editName').value = name;
+            document.getElementById('editPasswd').value = passwd;
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭编辑模态框
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 打开删除确认模态框
+        function openDeleteModal(userId) {
+            document.getElementById('deleteModal').style.display = 'block';
+            document.getElementById('deleteUserId').value = userId;
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭删除确认模态框
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 确认删除用户
+        function confirmDelete() {
+            const userId = document.getElementById('deleteUserId').value;
+            fetch('/admin_index/delete_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 使用更友好的提示方式
+                    const alert = document.createElement('div');
+                    alert.className = 'alert';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.left = '50%';
+                    alert.style.transform = 'translateX(-50%)';
+                    alert.style.backgroundColor = '#d4edda';
+                    alert.style.color = '#155724';
+                    alert.style.border = '1px solid #c3e6cb';
+                    alert.style.zIndex = '2000';
+                    alert.textContent = '删除成功';
+                    document.body.appendChild(alert);
+                    
+                    // 2秒后移除提示并刷新页面
+                    setTimeout(() => {
+                        alert.remove();
+                        location.reload();
+                    }, 2000);
+                } else {
+                    const alert = document.createElement('div');
+                    alert.className = 'alert';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.left = '50%';
+                    alert.style.transform = 'translateX(-50%)';
+                    alert.style.zIndex = '2000';
+                    alert.textContent = '删除失败: ' + data.message;
+                    document.body.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 3000);
+                }
+                closeDeleteModal();
+            })
+            .catch(error => {
+                const alert = document.createElement('div');
+                alert.className = 'alert';
+                alert.style.position = 'fixed';
+                alert.style.top = '20px';
+                alert.style.left = '50%';
+                alert.style.transform = 'translateX(-50%)';
+                alert.style.zIndex = '2000';
+                alert.textContent = '删除失败: ' + error;
+                document.body.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.remove();
+                }, 3000);
+                closeDeleteModal();
+            });
+        }
+
+        // 保存用户信息
+        function saveUser(event) {
+            event.preventDefault();
+            const userId = document.getElementById('editUserId').value;
+            const name = document.getElementById('editName').value;
+            const passwd = document.getElementById('editPasswd').value;
+
+            fetch('/admin_index/edit_user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    name: name,
+                    passwd: passwd
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 使用更友好的提示方式
+                    const alert = document.createElement('div');
+                    alert.className = 'alert';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.left = '50%';
+                    alert.style.transform = 'translateX(-50%)';
+                    alert.style.backgroundColor = '#d4edda';
+                    alert.style.color = '#155724';
+                    alert.style.border = '1px solid #c3e6cb';
+                    alert.style.zIndex = '2000';
+                    alert.textContent = '更新成功';
+                    document.body.appendChild(alert);
+                    
+                    // 2秒后移除提示并刷新页面
+                    setTimeout(() => {
+                        alert.remove();
+                        location.reload();
+                    }, 2000);
+                } else {
+                    const alert = document.createElement('div');
+                    alert.className = 'alert';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.left = '50%';
+                    alert.style.transform = 'translateX(-50%)';
+                    alert.style.zIndex = '2000';
+                    alert.textContent = '更新失败: ' + data.message;
+                    document.body.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 3000);
+                }
+                closeEditModal();
+            })
+            .catch(error => {
+                const alert = document.createElement('div');
+                alert.className = 'alert';
+                alert.style.position = 'fixed';
+                alert.style.top = '20px';
+                alert.style.left = '50%';
+                alert.style.transform = 'translateX(-50%)';
+                alert.style.zIndex = '2000';
+                alert.textContent = '更新失败: ' + error;
+                document.body.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.remove();
+                }, 3000);
+                closeEditModal();
+            });
+        }
+
+        // 点击模态框外部关闭模态框
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('editModal')) {
+                closeEditModal();
+            }
+            if (event.target == document.getElementById('deleteModal')) {
+                closeDeleteModal();
+            }
+        }
+
+        // 修改删除按钮的点击事件
+        function deleteUser(userId) {
+            openDeleteModal(userId);
+        }
+    </script>
+</body>
+</html>

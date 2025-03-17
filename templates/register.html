@@ -1,0 +1,55 @@
+<!--
+@author: 梁卓权 3122004397
+@create: 2025-01-01
+@last_update: 2025-01-05
+@description: 注册页面
+@version: 3.0
+@process: 
+    1.0: 新建文件，添加注册页面，实现交互
+    2.0: 升级注册页面
+    3.0: 链接引用main.css和main.js
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 航空票务管理系统</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/login.css">
+</head>
+<body>
+    <div class="container">
+        <h2>用户注册</h2>
+        {% if message %}
+            {% if "成功" in message %}
+            <div class="success-message">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">check_circle</span>
+                {{ message }}
+            </div>
+            {% else %}
+            <div class="error-message">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">error_outline</span>
+                {{ message }}
+            </div>
+            {% endif %}
+        {% endif %}
+        <form action="/register" method="post">
+            <div class="input-group">
+                <input type="text" id="register_id" name="register_id" placeholder="用户ID" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" name="password" placeholder="密码" required>
+            </div>
+            <button type="submit">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">person_add</span>
+                注册
+            </button>
+        </form>
+        <a href="/">
+            <span class="material-icons" style="vertical-align: middle; margin-right: 4px;">arrow_back</span>
+            返回登录
+        </a>
+    </div>
+</body>
+</html>

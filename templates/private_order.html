@@ -1,0 +1,419 @@
+<!--
+@author: 梁卓权 3122004397
+@create: 2025-01-01
+@last_update: 2025-01-05
+@description: 用户系统-订单管理页面
+@version: 3.0
+@process: 
+    1.0: 新建文件，添加航班跳转
+    2.0: 完善订单管理页面，实现交互
+    3.0: css样式升级，弃用基本表单，改用js实现传输
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/main.css">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #4285f4;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
+            --background-color: #f8f9fa;
+            --sidebar-color: #2c3e50;
+            --text-color: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-color);
+            color: white;
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar ul li a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 0.8rem 1rem;
+            display: block;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(10px);
+        }
+
+        .content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-header h1 {
+            font-size: 2rem;
+            color: var(--text-color);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            color: #666;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pay-btn {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .pay-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        .cancel-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+            }
+            .content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <h2>航空订票系统</h2>
+        <ul>
+            <li><a href="/user_index">航班查询</a></li>
+            <li><a href="#" class="active">订单管理</a></li>
+            <li><a href="/">退出登录</a></li>
+        </ul>
+    </nav>
+    <main class="content">
+        <div class="content-header">
+            <h1>我的订单</h1>
+        </div>
+        {% if message %}
+            <div class="alert">{{ message }}</div>
+        {% endif %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>订单号</th>
+                        <th>航班号</th>
+                        <th>舱位类型</th>
+                        <th>订票数量</th>
+                        <th>订单金额</th>
+                        <th>订单状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.OrderID }}</td>
+                        <td>{{ order.FlightID }}</td>
+                        <td>{{ order.Accom }}</td>
+                        <td>{{ order.OrderNum }}</td>
+                        <td>¥{{ "%.2f"|format(order.OrderPrice) }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if order.OStatus == '已支付' %}badge-success
+                                {% elif order.OStatus == '待支付' %}badge-warning
+                                {% elif order.OStatus == '已取消' %}badge-danger
+                                {% endif %}">
+                                {{ order.OStatus }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if order.OStatus == '待支付' %}
+                            <button class="button pay-btn" onclick="payOrder('{{ order.OrderID }}')">
+                                <span class="material-icons">payment</span>支付
+                            </button>
+                            <button class="button cancel-btn" onclick="cancelOrder('{{ order.OrderID }}')">
+                                <span class="material-icons">cancel</span>取消
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // 支付订单
+        function payOrder(orderId) {
+            if (!confirm('确定要支付此订单吗？')) {
+                return;
+            }
+
+            fetch('/user_index/pay_order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    order_id: orderId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const alert = document.createElement('div');
+                    alert.className = 'alert';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.left = '50%';
+                    alert.style.transform = 'translateX(-50%)';
+                    alert.style.backgroundColor = '#d4edda';
+                    alert.style.color = '#155724';
+                    alert.style.border = '1px solid #c3e6cb';
+                    alert.style.zIndex = '2000';
+                    alert.textContent = '支付成功';
+                    document.body.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        alert.remove();
+                        location.reload();
+                    }, 2000);
+                } else {
+                    const alert = document.createElement('div');
+                    alert.className = 'alert';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.left = '50%';
+                    alert.style.transform = 'translateX(-50%)';
+                    alert.style.zIndex = '2000';
+                    alert.textContent = '支付失败: ' + data.message;
+                    document.body.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                const alert = document.createElement('div');
+                alert.className = 'alert';
+                alert.style.position = 'fixed';
+                alert.style.top = '20px';
+                alert.style.left = '50%';
+                alert.style.transform = 'translateX(-50%)';
+                alert.style.zIndex = '2000';
+                alert.textContent = '支付失败: ' + error;
+                document.body.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.remove();
+                }, 3000);
+            });
+        }
+
+        // 取消订单
+        function cancelOrder(orderId) {
+            if (!confirm('确定要取消此订单吗？此操作不可恢复。')) {
+                return;
+            }
+
+            fetch('/user_index/cancel_order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    order_id: orderId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const alert = document.createElement('div');
+                    alert.className = 'alert';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.left = '50%';
+                    alert.style.transform = 'translateX(-50%)';
+                    alert.style.backgroundColor = '#d4edda';
+                    alert.style.color = '#155724';
+                    alert.style.border = '1px solid #c3e6cb';
+                    alert.style.zIndex = '2000';
+                    alert.textContent = '订单已取消';
+                    document.body.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        alert.remove();
+                        location.reload();
+                    }, 2000);
+                } else {
+                    const alert = document.createElement('div');
+                    alert.className = 'alert';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.left = '50%';
+                    alert.style.transform = 'translateX(-50%)';
+                    alert.style.zIndex = '2000';
+                    alert.textContent = '取消失败: ' + data.message;
+                    document.body.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                const alert = document.createElement('div');
+                alert.className = 'alert';
+                alert.style.position = 'fixed';
+                alert.style.top = '20px';
+                alert.style.left = '50%';
+                alert.style.transform = 'translateX(-50%)';
+                alert.style.zIndex = '2000';
+                alert.textContent = '取消失败: ' + error;
+                document.body.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.remove();
+                }, 3000);
+            });
+        }
+    </script>
+</body>
+</html>

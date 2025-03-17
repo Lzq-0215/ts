@@ -1,0 +1,48 @@
+<!--
+@author: 梁卓权 3122004397
+@create: 2025-01-01
+@last_update: 2025-01-05
+@description: 登录页面
+@version: 3.0
+@process: 
+    1.0: 新建文件，添加登录页面，实现交互
+    2.0: 升级登录页面
+    3.0: 链接引用main.css和main.js
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 航空票务管理系统</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/login.css">
+</head>
+<body>
+    <div class="container">
+        <h2>欢迎登录</h2>
+        {% if message %}
+            <div class="error-message">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">error_outline</span>
+                {{ message }}
+            </div>
+        {% endif %}
+        <form action="/" method="post">
+            <div class="input-group">
+                <input type="text" id="username" name="user_id" placeholder="用户ID" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" name="password" placeholder="密码" required>
+            </div>
+            <button type="submit">
+                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">login</span>
+                登录
+            </button>
+        </form>
+        <a href="/register">
+            <span class="material-icons" style="vertical-align: middle; margin-right: 4px;">person_add</span>
+            没有账号？立即注册
+        </a>
+    </div>
+</body>
+</html>

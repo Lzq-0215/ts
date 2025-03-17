@@ -1,0 +1,227 @@
+<!--
+@author: 梁卓权 3122004397
+@create: 2025-01-04
+@last_update: 2025-01-05
+@description: 管理员系统-管理员管理页面
+@version: 3.0
+@process: 
+    1.0: 创建文件，实现交互
+    2.0: 引用main.css和main.js
+    3.0: 修改路由错误，修复bug
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员管理 - 航空票务管理系统</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/main.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <h2>航空管理系统</h2>
+        <ul>
+            <li><a href="/admin_index">用户管理</a></li>
+            <li><a href="/admin_index/flight_manage">航班管理</a></li>
+            <li><a href="/admin_index/plane_manage">飞机管理</a></li>
+            <li><a class="active">管理员管理</a></li>
+            <li><a href="/admin_index/order_manage">订单管理</a></li>
+            <li><a href="/">退出登录</a></li>
+        </ul>
+    </nav>
+    <main class="content">
+        <div class="content-header">
+            <h1>管理员列表</h1>
+            <button class="add-btn" onclick="openModal('addModal')">
+                <span class="material-icons">add</span>添加管理员
+            </button>
+        </div>
+        {% if message %}
+            <div class="alert">{{ message }}</div>
+        {% endif %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>管理员ID</th>
+                        <th>管理员名</th>
+                        <th>密码</th>
+                        <th>角色</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                    <tr>
+                        <td>{{ admin.AdminID }}</td>
+                        <td>{{ admin.Name }}</td>
+                        <td>{{ admin.Passwd }}</td>
+                        <td>{{ admin.Role }}</td>
+                        <td>
+                            <button class="button edit-btn" onclick="openEditModal('{{ admin.AdminID }}', '{{ admin.Name }}', '{{ admin.Passwd }}', '{{ admin.Role }}')">
+                                <span class="material-icons">edit</span>编辑
+                            </button>
+                            <button class="button delete-btn" onclick="openDeleteModal('{{ admin.AdminID }}')">
+                                <span class="material-icons">delete</span>删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- 添加管理员的模态框 -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addModal')">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">添加管理员</h2>
+            <form id="addForm" onsubmit="submitAdd(event)">
+                <div class="form-group">
+                    <label for="addAdminId">管理员ID：</label>
+                    <input type="text" id="addAdminId" required>
+                </div>
+                <div class="form-group">
+                    <label for="addName">管理员名：</label>
+                    <input type="text" id="addName" required>
+                </div>
+                <div class="form-group">
+                    <label for="addPasswd">密码：</label>
+                    <input type="password" id="addPasswd" required>
+                </div>
+                <div class="form-group">
+                    <label for="addRole">角色：</label>
+                    <select id="addRole" required>
+                        <option value="ToAdmins">管理员管理</option>
+                        <option value="ToFlights">航班管理</option>
+                        <option value="ToPlanes">飞机管理</option>
+                        <option value="ToUsers">用户管理</option>
+                    </select>
+                </div>
+                <button type="submit" class="save-btn">
+                    <span class="material-icons">add_circle</span>添加
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑管理员的模态框 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editModal')">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">编辑管理员</h2>
+            <form id="editForm" onsubmit="submitEdit(event)">
+                <input type="hidden" id="editAdminId">
+                <div class="form-group">
+                    <label for="editName">管理员名：</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPasswd">密码：</label>
+                    <input type="password" id="editPasswd" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRole">角色：</label>
+                    <select id="editRole" required>
+                        <option value="ToAdmins">管理员管理</option>
+                        <option value="ToFlights">航班管理</option>
+                        <option value="ToPlanes">飞机管理</option>
+                        <option value="ToUsers">用户管理</option>
+                    </select>
+                </div>
+                <button type="submit" class="save-btn">
+                    <span class="material-icons">save</span>保存
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 删除确认的模态框 -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('deleteModal')">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">确认删除</h2>
+            <p style="margin-bottom: 2rem;">确定要删除这个管理员吗？此操作不可恢复。</p>
+            <input type="hidden" id="deleteAdminId">
+            <div style="display: flex; gap: 1rem;">
+                <button class="button delete-btn" style="flex: 1;" onclick="confirmDelete()">
+                    <span class="material-icons">delete_forever</span>确认删除
+                </button>
+                <button class="button" style="flex: 1; background-color: #6c757d; color: white;" onclick="closeModal('deleteModal')">
+                    <span class="material-icons">cancel</span>取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../static/main.js"></script>
+    <script>
+        // 添加管理员相关函数
+        function openAddModal() {
+            openModal('addModal');
+            document.getElementById('addForm').reset();
+        }
+
+        async function submitAdd(event) {
+            event.preventDefault();
+            const data = {
+                admin_id: document.getElementById('addAdminId').value,
+                name: document.getElementById('addName').value,
+                passwd: document.getElementById('addPasswd').value,
+                role: document.getElementById('addRole').value
+            };
+            
+            try {
+                await apiRequest('/admin_index/add_admin', 'POST', data);
+                closeModal('addModal');
+            } catch (error) {
+                console.error('添加失败:', error);
+            }
+        }
+
+        // 编辑管理员相关函数
+        function openEditModal(adminId, name, passwd, role) {
+            openModal('editModal');
+            document.getElementById('editAdminId').value = adminId;
+            document.getElementById('editName').value = name;
+            document.getElementById('editPasswd').value = passwd;
+            document.getElementById('editRole').value = role;
+        }
+
+        async function submitEdit(event) {
+            event.preventDefault();
+            const data = {
+                admin_id: document.getElementById('editAdminId').value,
+                name: document.getElementById('editName').value,
+                passwd: document.getElementById('editPasswd').value,
+                role: document.getElementById('editRole').value
+            };
+            
+            try {
+                await apiRequest('/admin_index/edit_admin', 'POST', data);
+                closeModal('editModal');
+            } catch (error) {
+                console.error('更新失败:', error);
+            }
+        }
+
+        // 删除管理员相关函数
+        function openDeleteModal(adminId) {
+            openModal('deleteModal');
+            document.getElementById('deleteAdminId').value = adminId;
+        }
+
+        async function confirmDelete() {
+            const adminId = document.getElementById('deleteAdminId').value;
+            try {
+                await apiRequest('/admin_index/delete_admin', 'POST', { admin_id: adminId });
+                closeModal('deleteModal');
+            } catch (error) {
+                console.error('删除失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>

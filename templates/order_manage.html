@@ -1,0 +1,193 @@
+<!--
+@author: 梁卓权 3122004397
+@create: 2025-01-05
+@last_update: 2025-01-05
+@description: 管理员系统-订单管理页面
+@version: 1.0
+@process: 
+    1.0: 创建文件，实现交互，完善功能
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理 - 航空票务管理系统</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/main.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <h2>航空管理系统</h2>
+        <ul>
+            <li><a href="/admin_index">用户管理</a></li>
+            <li><a href="/admin_index/flight_manage">航班管理</a></li>
+            <li><a href="/admin_index/plane_manage">飞机管理</a></li>
+            <li><a href="/admin_index/admin_manage">管理员管理</a></li>
+            <li><a class="active">订单管理</a></li>
+            <li><a href="/">退出登录</a></li>
+        </ul>
+    </nav>
+    <main class="content">
+        <div class="content-header">
+            <h1>订单列表</h1>
+            <div class="search-container">
+                <form id="searchForm" class="search-form" onsubmit="handleSearch(event)">
+                    <div class="form-group">
+                        <input type="text" id="searchUserId" placeholder="用户ID" value="{{ request.args.get('user_id', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="searchFlightId" placeholder="航班号" value="{{ request.args.get('flight_id', '') }}">
+                    </div>
+                    <button type="submit" class="search-btn">
+                        <span class="material-icons">search</span>搜索
+                    </button>
+                    <button type="button" class="reset-btn" onclick="resetSearch()">
+                        <span class="material-icons">refresh</span>重置
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% if message %}
+            <div class="alert">{{ message }}</div>
+        {% endif %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>订单号</th>
+                        <th>用户ID</th>
+                        <th>航班号</th>
+                        <th>舱位类型</th>
+                        <th>订票数量</th>
+                        <th>订单金额</th>
+                        <th>订单状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.OrderID }}</td>
+                        <td>{{ order.UserID }}</td>
+                        <td>{{ order.FlightID }}</td>
+                        <td>{{ order.Accom }}</td>
+                        <td>{{ order.OrderNum }}</td>
+                        <td>¥{{ "%.2f"|format(order.OrderPrice) }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if order.OStatus == '已支付' %}badge-success
+                                {% elif order.OStatus == '待支付' %}badge-warning
+                                {% elif order.OStatus == '已取消' %}badge-danger
+                                {% endif %}">
+                                {{ order.OStatus }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if order.OStatus == '待支付' %}
+                            <button class="button edit-btn" onclick="updateOrderStatus('{{ order.OrderID }}', '已支付')">
+                                <span class="material-icons">check_circle</span>确认支付
+                            </button>
+                            <button class="button delete-btn" onclick="updateOrderStatus('{{ order.OrderID }}', '已取消')">
+                                <span class="material-icons">cancel</span>取消订单
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="../static/main.js"></script>
+    <script>
+        // 处理搜索
+        function handleSearch(event) {
+            event.preventDefault();
+            const userId = document.getElementById('searchUserId').value;
+            const flightId = document.getElementById('searchFlightId').value;
+            
+            let url = '/admin_index/order_manage?';
+            if (userId) url += `user_id=${userId}&`;
+            if (flightId) url += `flight_id=${flightId}&`;
+            
+            window.location.href = url.slice(0, -1); // 移除最后一个 & 符号
+        }
+
+        // 重置搜索
+        function resetSearch() {
+            window.location.href = '/admin_index/order_manage';
+        }
+
+        // 更新订单状态
+        async function updateOrderStatus(orderId, status) {
+            try {
+                await apiRequest('/admin_index/update_order_status', 'POST', {
+                    order_id: orderId,
+                    status: status
+                });
+            } catch (error) {
+                console.error('更新失败:', error);
+            }
+        }
+    </script>
+
+    <style>
+        .search-container {
+            margin-left: 2rem;
+            flex: 1;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-form .form-group {
+            margin: 0;
+            flex: 1;
+        }
+
+        .search-form input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+        }
+
+        .search-btn, .reset-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .search-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .reset-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!--
+@author: 梁卓权 3122004397
+@create: 2025-01-01
+@last_update: 2025-01-05
+@description: 用户系统-用户界面
+@version: 5.0
+@process: 
+    1.0: 新建文件，添加航班查询和添加订单管理跳转
+    2.0: 完善航班查询和views的交互
+    3.0: css样式升级，弃用基本表单，改用js实现传输
+    4.0: 进一步完善功能
+    5.0: 链接引用main.css和main.js
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户界面</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/main.css">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #4285f4;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
+            --background-color: #f8f9fa;
+            --sidebar-color: #2c3e50;
+            --text-color: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-color);
+            color: white;
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar ul li a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 0.8rem 1rem;
+            display: block;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(10px);
+        }
+
+        .content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-header h1 {
+            font-size: 2rem;
+            color: var(--text-color);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            color: #666;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .book-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .book-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            width: 500px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            position: absolute;
+            right: 1.5rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            color: var(--danger-color);
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.2);
+        }
+
+        .book-submit-btn {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .book-submit-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+            }
+            .content {
+                margin-left: 0;
+            }
+            .modal-content {
+                width: 90%;
+            }
+        }
+
+        .search-container {
+            margin-left: 2rem;
+            flex: 1;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-form .form-group {
+            margin: 0;
+            flex: 1;
+        }
+
+        .search-form input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+        }
+
+        .search-btn, .reset-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .search-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .reset-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <h2>航空订票系统</h2>
+        <ul>
+            <li><a href="#" class="active">航班查询</a></li>
+            <li><a href="/user_index/private_order">订单管理</a></li>
+            <li><a href="/">退出登录</a></li>
+        </ul>
+    </nav>
+    <main class="content">
+        <div class="content-header">
+            <h1>航班列表</h1>
+            <div class="search-container">
+                <form id="searchForm" class="search-form" onsubmit="handleSearch(event)">
+                    <div class="form-group">
+                        <input type="text" id="searchOrigin" placeholder="出发地" value="{{ request.args.get('origin', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="searchDestin" placeholder="目的地" value="{{ request.args.get('destin', '') }}">
+                    </div>
+                    <button type="submit" class="search-btn">
+                        <span class="material-icons">search</span>搜索
+                    </button>
+                    <button type="button" class="reset-btn" onclick="resetSearch()">
+                        <span class="material-icons">refresh</span>重置
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% if message %}
+            <div class="alert">{{ message }}</div>
+        {% endif %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>航班号</th>
+                        <th>出发地</th>
+                        <th>目的地</th>
+                        <th>起飞时间</th>
+                        <th>预计到达</th>
+                        <th>商务舱余票</th>
+                        <th>经济舱余票</th>
+                        <th>航班状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for flight in flights %}
+                    <tr>
+                        <td>{{ flight.FlightID }}</td>
+                        <td>{{ flight.Origin }}</td>
+                        <td>{{ flight.Destin }}</td>
+                        <td>{{ flight.STime }}</td>
+                        <td>{{ flight.PEtime }}</td>
+                        <td>{{ flight.BCfree }}</td>
+                        <td>{{ flight.ECfree }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if flight.FStatus == '待起飞' %}badge-success
+                                {% elif flight.FStatus == '已起飞' %}badge-warning
+                                {% elif flight.FStatus == '已取消' %}badge-danger
+                                {% endif %}">
+                                {{ flight.FStatus }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if flight.FStatus == '待起飞' %}
+                            <button class="button book-btn" onclick="openBookModal('{{ flight.FlightID }}', '{{ flight.BCfree }}', '{{ flight.ECfree }}')">
+                                <span class="material-icons">flight_takeoff</span>预订
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- 预订航班的模态框 -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBookModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">预订航班</h2>
+            <form id="bookForm" onsubmit="submitBooking(event)">
+                <input type="hidden" id="bookFlightId">
+                <div class="form-group">
+                    <label for="bookClass">舱位类型：</label>
+                    <select id="bookClass" required>
+                        <option value="">请选择舱位</option>
+                        <option value="商务舱">商务舱</option>
+                        <option value="经济舱">经济舱</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bookNum">订票数量：</label>
+                    <input type="number" id="bookNum" min="1" required>
+                </div>
+                <button type="submit" class="book-submit-btn">
+                    <span class="material-icons">done</span>确认预订
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 打开预订模态框
+        function openBookModal(flightId, bcFree, ecFree) {
+            document.getElementById('bookModal').style.display = 'block';
+            document.getElementById('bookFlightId').value = flightId;
+            document.body.style.overflow = 'hidden';
+
+            // 存储余票信息
+            window.bcFree = parseInt(bcFree);
+            window.ecFree = parseInt(ecFree);
+
+            // 重置表单
+            document.getElementById('bookForm').reset();
+        }
+
+        // 关闭预订模态框
+        function closeBookModal() {
+            document.getElementById('bookModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 提交预订
+        function submitBooking(event) {
+            event.preventDefault();
+            const flightId = document.getElementById('bookFlightId').value;
+            const bookClass = document.getElementById('bookClass').value;
+            const bookNum = parseInt(document.getElementById('bookNum').value);
+
+            // 检查余票
+            if (bookClass === '商务舱' && bookNum > window.bcFree) {
+                showAlert('商务舱余票不足', false);
+                return;
+            }
+            if (bookClass === '经济舱' && bookNum > window.ecFree) {
+                showAlert('经济舱余票不足', false);
+                return;
+            }
+
+            fetch('/user_index/book_flight', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    flight_id: flightId,
+                    class_type: bookClass,
+                    num: bookNum
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('预订成功', true);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showAlert(data.message || '预订失败', false);
+                }
+                closeBookModal();
+            })
+            .catch(error => {
+                showAlert('预订失败: ' + error, false);
+                closeBookModal();
+            });
+        }
+
+        // 显示提示信息
+        function showAlert(message, isSuccess) {
+            const alert = document.createElement('div');
+            alert.className = `alert ${isSuccess ? 'alert-success' : 'alert-error'}`;
+            alert.style.display = 'block';
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // 点击模态框外部关闭模态框
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('bookModal')) {
+                closeBookModal();
+            }
+        }
+
+        // 处理搜索
+        function handleSearch(event) {
+            event.preventDefault();
+            const origin = document.getElementById('searchOrigin').value;
+            const destin = document.getElementById('searchDestin').value;
+            
+            let url = '/user_index?';
+            if (origin) url += `origin=${origin}&`;
+            if (destin) url += `destin=${destin}&`;
+            
+            window.location.href = url.slice(0, -1); // 移除最后一个 & 符号
+        }
+
+        // 重置搜索
+        function resetSearch() {
+            window.location.href = '/user_index';
+        }
+    </script>
+</body>
+</html>

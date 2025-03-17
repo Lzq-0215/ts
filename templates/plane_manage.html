@@ -1,0 +1,684 @@
+<!--
+@author: 梁卓权 3122004397
+@create: 2025-01-02
+@last_update: 2025-01-05
+@description: 飞机管理页面
+@version: 5.0
+@process: 
+    1.0: 新建文件，添加飞机管理跳转，实现交互
+    2.0: 完善飞机管理页面
+    3.0: 添加其余跳转页面
+    4.0: css样式升级，弃用基本表单，改用js实现传输
+    5.0: 链接引用main.css和main.js
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞机管理</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/main.css">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #4285f4;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
+            --background-color: #f8f9fa;
+            --sidebar-color: #2c3e50;
+            --text-color: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-color);
+            color: white;
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar ul li a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            padding: 0.8rem 1rem;
+            display: block;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(10px);
+        }
+
+        .content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-header h1 {
+            font-size: 2rem;
+            color: var(--text-color);
+        }
+
+        .add-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            color: #666;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .edit-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5vh auto;
+            padding: 2rem;
+            width: 500px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            position: absolute;
+            right: 1.5rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            color: var(--danger-color);
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.2);
+        }
+
+        .save-btn {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .save-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                padding: 0;
+            }
+            .content {
+                margin-left: 0;
+            }
+            .modal-content {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <h2>航空管理系统</h2>
+        <ul>
+            <li><a href="/admin_index">用户管理</a></li>
+            <li><a href="/admin_index/flight_manage">航班管理</a></li>
+            <li><a class="active">飞机管理</a></li>
+            <li><a href="/admin_index/admin_manage">管理员管理</a></li>
+            <li><a href="/admin_index/order_manage">订单管理</a></li>
+            <li><a href="/">退出登录</a></li>
+        </ul>
+    </nav>
+    <main class="content">
+        <div class="content-header">
+            <h1>飞机列表</h1>
+            <button class="add-btn" onclick="openAddModal()">
+                <span class="material-icons">add</span>添加飞机
+            </button>
+        </div>
+        {% if message %}
+            <div class="alert">{{ message }}</div>
+        {% endif %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>飞机号</th>
+                        <th>商务舱座位数</th>
+                        <th>商务舱价格</th>
+                        <th>经济舱座位数</th>
+                        <th>经济舱价格</th>
+                        <th>飞机状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plane in planes %}
+                    <tr>
+                        <td>{{ plane.PlaneID }}</td>
+                        <td>{{ plane.BCnum }}</td>
+                        <td>¥{{ "%.2f"|format(plane.BCprice) }}</td>
+                        <td>{{ plane.ECnum }}</td>
+                        <td>¥{{ "%.2f"|format(plane.ECprice) }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if plane.PStatus == '待命' %}badge-success
+                                {% elif plane.PStatus == '飞行中' %}badge-warning
+                                {% elif plane.PStatus == '维护中' %}badge-danger
+                                {% endif %}">
+                                {{ plane.PStatus }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="button edit-btn" onclick="openEditModal('{{ plane.PlaneID }}', {{ plane.BCnum }}, {{ plane.BCprice }}, {{ plane.ECnum }}, {{ plane.ECprice }}, '{{ plane.PStatus }}')">
+                                <span class="material-icons">edit</span>编辑
+                            </button>
+                            <button class="button delete-btn" onclick="openDeleteModal('{{ plane.PlaneID }}')">
+                                <span class="material-icons">delete</span>删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- 添加飞机的模态框 -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">添加飞机</h2>
+            <form id="addForm" onsubmit="submitAdd(event)">
+                <div class="form-group">
+                    <label for="addPlaneId">飞机号：</label>
+                    <input type="text" id="addPlaneId" required>
+                </div>
+                <div class="form-group">
+                    <label for="addBCNum">商务舱座位数：</label>
+                    <input type="number" id="addBCNum" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="addBCPrice">商务舱价格：</label>
+                    <input type="number" id="addBCPrice" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="addECNum">经济舱座位数：</label>
+                    <input type="number" id="addECNum" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="addECPrice">经济舱价格：</label>
+                    <input type="number" id="addECPrice" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="addPStatus">飞机状态：</label>
+                    <select id="addPStatus" required>
+                        <option value="待命">待命</option>
+                        <option value="飞行中">飞行中</option>
+                        <option value="维护中">维护中</option>
+                    </select>
+                </div>
+                <button type="submit" class="save-btn">
+                    <span class="material-icons">add_circle</span>添加
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑飞机的模态框 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">编辑飞机</h2>
+            <form id="editForm" onsubmit="submitEdit(event)">
+                <input type="hidden" id="editPlaneId">
+                <div class="form-group">
+                    <label for="editBCNum">商务舱座位数：</label>
+                    <input type="number" id="editBCNum" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBCPrice">商务舱价格：</label>
+                    <input type="number" id="editBCPrice" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="editECNum">经济舱座位数：</label>
+                    <input type="number" id="editECNum" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editECPrice">经济舱价格：</label>
+                    <input type="number" id="editECPrice" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPStatus">飞机状态：</label>
+                    <select id="editPStatus" required>
+                        <option value="待命">待命</option>
+                        <option value="飞行中">飞行中</option>
+                        <option value="维护中">维护中</option>
+                    </select>
+                </div>
+                <button type="submit" class="save-btn">
+                    <span class="material-icons">save</span>保存
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 删除确认的模态框 -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">确认删除</h2>
+            <p style="margin-bottom: 2rem;">确定要删除这架飞机吗？此操作不可恢复。</p>
+            <input type="hidden" id="deletePlaneId">
+            <div style="display: flex; gap: 1rem;">
+                <button class="button delete-btn" style="flex: 1;" onclick="confirmDelete()">
+                    <span class="material-icons">delete_forever</span>确认删除
+                </button>
+                <button class="button" style="flex: 1; background-color: #6c757d; color: white;" onclick="closeDeleteModal()">
+                    <span class="material-icons">cancel</span>取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 显示提示信息
+        function showAlert(message, isSuccess) {
+            const alert = document.createElement('div');
+            alert.className = `alert ${isSuccess ? 'alert-success' : 'alert-error'}`;
+            alert.style.display = 'block';
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // 添加飞机相关函数
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('addForm').reset();
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function submitAdd(event) {
+            event.preventDefault();
+            const planeId = document.getElementById('addPlaneId').value;
+            const bcNum = parseInt(document.getElementById('addBCNum').value);
+            const bcPrice = parseFloat(document.getElementById('addBCPrice').value);
+            const ecNum = parseInt(document.getElementById('addECNum').value);
+            const ecPrice = parseFloat(document.getElementById('addECPrice').value);
+            const pStatus = document.getElementById('addPStatus').value;
+
+            fetch('/admin_index/add_plane', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    plane_id: planeId,
+                    bc_num: bcNum,
+                    bc_price: bcPrice,
+                    ec_num: ecNum,
+                    ec_price: ecPrice,
+                    p_status: pStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('添加成功', true);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showAlert(data.message || '添加失败', false);
+                }
+                closeAddModal();
+            })
+            .catch(error => {
+                showAlert('添加失败: ' + error, false);
+                closeAddModal();
+            });
+        }
+
+        // 编辑飞机相关函数
+        function openEditModal(planeId, bcNum, bcPrice, ecNum, ecPrice, pStatus) {
+            document.getElementById('editModal').style.display = 'block';
+            document.getElementById('editPlaneId').value = planeId;
+            document.getElementById('editBCNum').value = bcNum;
+            document.getElementById('editBCPrice').value = bcPrice;
+            document.getElementById('editECNum').value = ecNum;
+            document.getElementById('editECPrice').value = ecPrice;
+            document.getElementById('editPStatus').value = pStatus;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function submitEdit(event) {
+            event.preventDefault();
+            const planeId = document.getElementById('editPlaneId').value;
+            const bcNum = parseInt(document.getElementById('editBCNum').value);
+            const bcPrice = parseFloat(document.getElementById('editBCPrice').value);
+            const ecNum = parseInt(document.getElementById('editECNum').value);
+            const ecPrice = parseFloat(document.getElementById('editECPrice').value);
+            const pStatus = document.getElementById('editPStatus').value;
+
+            fetch('/admin_index/edit_plane', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    plane_id: planeId,
+                    bc_num: bcNum,
+                    bc_price: bcPrice,
+                    ec_num: ecNum,
+                    ec_price: ecPrice,
+                    p_status: pStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('更新成功', true);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showAlert(data.message || '更新失败', false);
+                }
+                closeEditModal();
+            })
+            .catch(error => {
+                showAlert('更新失败: ' + error, false);
+                closeEditModal();
+            });
+        }
+
+        // 删除飞机相关函数
+        function openDeleteModal(planeId) {
+            document.getElementById('deleteModal').style.display = 'block';
+            document.getElementById('deletePlaneId').value = planeId;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function confirmDelete() {
+            const planeId = document.getElementById('deletePlaneId').value;
+
+            fetch('/admin_index/delete_plane', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    plane_id: planeId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('删除成功', true);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showAlert(data.message || '删除失败', false);
+                }
+                closeDeleteModal();
+            })
+            .catch(error => {
+                showAlert('删除失败: ' + error, false);
+                closeDeleteModal();
+            });
+        }
+
+        // 点击模态框外部关闭模态框
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('addModal')) {
+                closeAddModal();
+            }
+            if (event.target == document.getElementById('editModal')) {
+                closeEditModal();
+            }
+            if (event.target == document.getElementById('deleteModal')) {
+                closeDeleteModal();
+            }
+        }
+    </script>
+</body>
+</html>
